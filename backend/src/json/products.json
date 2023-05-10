@@ -1,0 +1,22 @@
+[
+  { 
+    "sabor": "morango",
+    "price": 10,
+    "description": "Delicioso suco da fruta geladinho e fresquinho feito na hora"
+  },
+  { 
+    "sabor": "laranja",
+    "price": 10,
+    "description": "Delicioso suco da fruta geladinho fresquinho e feito na hora"
+  },
+  { 
+    "sabor": "limao",
+    "price": 10,
+    "description": "Delicioso suco da fruta geladinho fresquinho e feito na hora"
+  },
+  { 
+    "sabor": "maracuja",
+    "price": 10,
+    "description": "Delicioso suco da fruta geladinho fresquinho e feito na hora"
+  }
+]

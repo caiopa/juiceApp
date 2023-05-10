@@ -1,0 +1,37 @@
+version: "3"
+services:
+  node:
+    image: node
+    container_name: node
+    build: ./
+    # Mesmo que `docker run -t`
+    tty: true
+    # Mesmo que `docker run -i`
+    stdin_open: true
+    command: bash
+    restart: always
+    working_dir: /app
+    # Lista de volumes (diretórios) mapeados de fora para dentro do container
+    volumes:
+      # Monta o diretório atual, com todos os dados do projeto,
+      # dentro do diretório /app
+      - ./:/app
+    depends_on:
+      - mongodb
+    # na notação porta_de_fora:porta_de_dentro
+    ports:
+      # Expõe a porta padrão da aplicação: altere aqui caso use outra porta
+      - 3001:3001
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/myapp
+  mongodb:
+    image: mongo
+    container_name: mongo
+    volumes:
+      - ./:/app
+    restart: always
+    ports:
+      - 27017:27017
+networks:
+  default:
+    name: myapp-net
