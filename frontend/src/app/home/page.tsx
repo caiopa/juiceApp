@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { getProducts } from "../api/products/router";
 import ProductCard from "./productCard/page";
 import Carrousel from "../componentes/Carrousel";
-import { useRouter } from "next/navigation";
+import { useTotalStore } from "@/store";
 
 export default function Home() {
   const [products, setProducts] = useState(null);
+  const total = useTotalStore((state) => state.total)
  
   const getProduct = async (token: any) => {
     const produtos = await getProducts(token);
@@ -40,6 +41,7 @@ export default function Home() {
       <Header />
       <Carrousel/>
       {products && <ProductCard products={products} />}
+      {total}
       
     </>
   );

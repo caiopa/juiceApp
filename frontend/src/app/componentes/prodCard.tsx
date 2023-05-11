@@ -1,5 +1,6 @@
+import { useTotalStore } from '@/store';
 import { useEffect, useState } from 'react';
-
+import { shallow } from 'zustand/shallow'
 
 interface ProductProps {
   sabor: string;
@@ -12,12 +13,16 @@ interface ProductCardProps {
   total: any
 }
 
-export default function ProductCard({ product, setTotal, total }: ProductCardProps) {
+export default function ProductCard({ product,/*  setTotal, total  */}: ProductCardProps) {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedQuantities, setSelectedQuantities] = useState<number[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
-  
 
+  const {increaseTotal, removeTotal} = useTotalStore((state) => ({
+    increaseTotal: state.increaseTotal,
+    removeTotal: state.removeTotal
+  }), shallow);
+ 
   const priceBySize: {[key: string]: number} = {
     '300ml': 10,
     '400ml': 15,
@@ -36,7 +41,7 @@ export default function ProductCard({ product, setTotal, total }: ProductCardPro
 
   useEffect(() => {
     setTotalPrice(calculateTotalPrice());
-    setTotal(total);
+    // setTotal(total);
   }, [selectedSizes, selectedQuantities, calculateTotalPrice]);
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,6 +61,8 @@ export default function ProductCard({ product, setTotal, total }: ProductCardPro
     }
   };
 
+  const total = useTotalStore((state) => state.total);
+  console.log('Novo total:', total);
   
   const handleAddQuantity = (index: number) => {
     const newSelectedQuantities = [...selectedQuantities];
@@ -63,19 +70,19 @@ export default function ProductCard({ product, setTotal, total }: ProductCardPro
     setSelectedQuantities(newSelectedQuantities);
     const itemPrice = priceBySize[selectedSizes[index]];
     const newTotalPrice = totalPrice + itemPrice;
-    setTotal(prevTotal => prevTotal + itemPrice);
+    console.log(increaseTotal(itemPrice))
+    // setTotal(prevTotal => prevTotal + itemPrice);
     setTotalPrice(newTotalPrice);
   };
-  
-
-  
+    
   const handleRemoveQuantity = (index: number) => {
     const newSelectedQuantities = [...selectedQuantities];
     const priceToRemove = priceBySize[selectedSizes[index]];
     if (newSelectedQuantities[index] > 0) {
       newSelectedQuantities[index] -= 1;
       const newTotalPrice = totalPrice - priceToRemove;
-      setTotal(prevTotal => prevTotal - priceToRemove);
+      console.log(removeTotal(priceToRemove))
+      // setTotal(prevTotal => prevTotal - priceToRemove);
       setTotalPrice(newTotalPrice);
       setSelectedQuantities(newSelectedQuantities); 
     }
@@ -97,7 +104,7 @@ export default function ProductCard({ product, setTotal, total }: ProductCardPro
     
     // Calcular o novo valor total e atualizar o estado total
     const newTotal = cartItems.reduce((acc: number, item: any) => acc + item.total, 0);
-    setTotal(newTotal);
+    // setTotal(newTotal);
     
     // Limpar os estados para uma nova seleção
     setSelectedSizes([]);
