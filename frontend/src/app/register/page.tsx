@@ -1,13 +1,11 @@
 'use client'
 import Button from '@/app/componentes/button';
-import Input from '@/app/componentes/input';
-import styles from '../page.module.css'
 import { useForm } from "react-hook-form";
 import { registerSchema, typeRegisterSchema } from '@/zodSchemas/schemas';
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerUser } from '../api/user/router';
 import { useRouter } from 'next/navigation'
-import * as S from '../page.module.css'
+
 
 export default function Register() {
 
