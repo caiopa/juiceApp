@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getProducts } from "../api/products/router";
 import ProductCard from "./productCard/page";
 import Carrousel from "../componentes/Carrousel";
+
 import { useTotalStore } from "@/store";
 
 export default function Home() {
@@ -18,7 +19,7 @@ export default function Home() {
   useEffect(() => {
     let user;
     try {
-      user = JSON.parse(localStorage.getItem("user") || "");
+      user = JSON.parse(localStorage.getItem("user") || "[]");
       const token = user?.token;
       fetchProducts(token);
     } catch (e) {
