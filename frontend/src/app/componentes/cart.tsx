@@ -1,68 +1,75 @@
-import { useState, useEffect } from "react";
+import { useTotalStore } from "@/store/total";
+import { useEffect } from "react";
 
-export default function CartCard({ setTotal, total }: any) {
-  const [cart, setCart] = useState<any>([]);
-
-  useEffect(() => {
-    const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
-    setCart(cartData);
-    setTotal(total + cartData.map((cart: any) => (cart.total)).reduce((a: number, b: number) => a + b, 0));
-
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
-
-  const calcularTotal = (tamanho: string, quantidade: number) => {
-    switch (tamanho) {
-      case '300ml':
-        return quantidade * 10;
-      case '400ml':
-        return quantidade * 15;
-      case '500ml':
-        return quantidade * 17;
-      default:
-        return 0;
-    }
+export const calcularTotal = (tamanho: string, quantidade: number) => {
+  switch (tamanho) {
+    case '300ml':
+      return quantidade * 10;
+    case '400ml':
+      return quantidade * 15;
+    case '500ml':
+      return quantidade * 17;
+    default:
+      return 0;
   }
+};
 
-  const handleAumentar = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, itemIndex: number, tamanhoIndex: number) => {
+export default function CartCard({ item, index }: any) {
+  const { state: { cart, total }, actions: { addValue, removeValue, addQuantity, removeQuantity, setCart, setValue } } = useTotalStore();
+
+ /*  useEffect(() => {
+    setValue(atualizarValorTotal(cart) as any)
+  }, [cart, addValue, setValue]); */
+
+  const atualizarValorTotal = (carrinho: any[]) => {
+    const newTotal = carrinho.reduce((acc: number, item: any) => {
+      item.quantidade.forEach((qtd: number, tamanhoIndex: number) => {
+        acc += calcularTotal(item.tamanho[tamanhoIndex], qtd);
+      });
+
+      return acc;
+    }, 0);
+
+    setValue(newTotal);
+    console.log(newTotal);
+    return newTotal; // Retorna o novo total atualizado
+  };
+
+  const handleAumentar = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, tamanhoIndex: number) => {
     event.preventDefault();
-    const updatedCart = [...cart];
-    if (updatedCart[itemIndex].quantidade[tamanhoIndex] !== -1) {
-      updatedCart[itemIndex].quantidade[tamanhoIndex] += 1;
-      updatedCart[itemIndex].total = updatedCart[itemIndex].tamanho.reduce((acc: number, tamanho: string, index: number) => {
-        return acc + calcularTotal(tamanho, updatedCart[itemIndex].quantidade[index]);
-      }, 0);
-      setCart(updatedCart);
-      setTotal(cart.reduce((acc: number, item: any) => {
-        return acc + item.total;
-      }, 0));
+    const carrinho = [...cart];
+    const updatedItem = carrinho[index];
+
+    if (updatedItem.quantidade[tamanhoIndex] >= 0) {
+      updatedItem.quantidade[tamanhoIndex] += 1;
+      carrinho[index] = updatedItem;
+      setCart(carrinho);
+      const newTotal = atualizarValorTotal(carrinho); // Obtém o novo total
+      setValue(newTotal)
+      console.log('+', newTotal);
     }
   };
+
+  const handleDiminuir = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, tamanhoIndex: number) => {
+    event.preventDefault();
+    const carrinho = [...cart];
+    const updatedItem = carrinho[index];
+
+    if (updatedItem.quantidade[tamanhoIndex] > 0) {
+      updatedItem.quantidade[tamanhoIndex] -= 1;
+      carrinho[index] = updatedItem;
+      setCart(carrinho);
+      const newTotal = atualizarValorTotal(carrinho); // Obtém o novo total
+      setValue(newTotal)
+      console.log('-', newTotal);
+    }
+  };
+
+
+
   
-
-  const handleDiminuir = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, itemIndex: number, tamanhoIndex: number) => {
-    event.preventDefault();
-    const updatedCart = [...cart];
-    if (updatedCart[itemIndex].quantidade[tamanhoIndex] > 0) {
-      updatedCart[itemIndex].quantidade[tamanhoIndex] -= 1;
-      updatedCart[itemIndex].total = updatedCart[itemIndex].tamanho.reduce((acc: number, tamanho: string, index: number) => {
-        return acc + calcularTotal(tamanho, updatedCart[itemIndex].quantidade[index]);
-      }, 0);
-      setCart(updatedCart);
-      setTotal(cart.reduce((acc: number, item: any) => {
-        return acc + item.total;
-      }, 0));
-    }
-  };
-
-
   return (
-    <>
-  {cart.length > 0 && cart.map((item: any, itemIndex: number) => (
-    <div key={itemIndex} className="w-screen m-auto">
+    <div className="w-screen m-auto">
       <p className="text-lg">Sabor: {item.sabor}</p>
       <table className="w-[350px]">
         <thead className="text-center">
@@ -77,9 +84,9 @@ export default function CartCard({ setTotal, total }: any) {
             <tr key={tamanhoIndex}>
               <td className="py-2">{tamanho}</td>
               <td className="py-2">
-                <button className="py-2 px-4" onClick={(e) => handleDiminuir(e, itemIndex, tamanhoIndex)}>-</button>
+                <button className="py-2 px-4" onClick={(e) => handleDiminuir(e, tamanhoIndex)}>-</button>
                 {item.quantidade[tamanhoIndex]}
-                <button className="py-2 px-4" onClick={(e) => handleAumentar(e, itemIndex, tamanhoIndex)}>+</button>
+                <button className="py-2 px-4" onClick={(e) => handleAumentar(e, tamanhoIndex)}>+</button>
               </td>
               <td className="py-2">{calcularTotal(tamanho, item.quantidade[tamanhoIndex])}</td>
             </tr>
@@ -87,8 +94,5 @@ export default function CartCard({ setTotal, total }: any) {
         </tbody>
       </table>
     </div>
-  ))}
-</>
-
   );
 }
