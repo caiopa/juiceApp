@@ -1,6 +1,6 @@
-import { useTotalStore } from '@/store';
-import { useEffect, useState } from 'react';
-import { shallow } from 'zustand/shallow'
+import { useTotalStore } from '../../store/total'
+import { useCallback, useEffect, useState } from 'react';
+
 
 interface ProductProps {
   sabor: string;
@@ -9,20 +9,29 @@ interface ProductProps {
 
 interface ProductCardProps {
   product: ProductProps;
-  setTotal: (value: number | ((prevTotal: number) => number)) => void;
-  total: any
+  /* setTotal: (value: number | ((prevTotal: number) => number)) => void;
+  total: any */
 }
 
-export default function ProductCard({ product,/*  setTotal, total  */}: ProductCardProps) {
+export default function ProductCard({ product }: ProductCardProps) {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedQuantities, setSelectedQuantities] = useState<number[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
 
-  const {increaseTotal, removeTotal} = useTotalStore((state) => ({
-    increaseTotal: state.increaseTotal,
-    removeTotal: state.removeTotal
-  }), shallow);
- 
+  const { 
+    state: { 
+      total,
+      cart 
+    }, 
+    actions: { 
+      addValue,
+      removeValue,
+      setValue,
+      addItemCart,
+      removeItemCart,
+      setCart 
+    } } = useTotalStore();
+
   const priceBySize: {[key: string]: number} = {
     '300ml': 10,
     '400ml': 15,
@@ -30,20 +39,24 @@ export default function ProductCard({ product,/*  setTotal, total  */}: ProductC
   };
 
  
-  const calculateTotalPrice = () => {
-    const total = selectedQuantities.reduce((acc, quantity, index) => {
+const calculateTotalPrice = useCallback(() => {
+    const totalItems = selectedQuantities.reduce((acc, quantity, index) => {
       const price = priceBySize[selectedSizes[index]];
-      return acc + (price * quantity);
+      return acc + price * quantity;
     }, 0);
-    setTotalPrice(total)
-    return total;
-  };
+    return totalItems;
+  }, [selectedSizes, selectedQuantities]);
 
   useEffect(() => {
-    setTotalPrice(calculateTotalPrice());
-    // setTotal(total);
-  }, [selectedSizes, selectedQuantities, calculateTotalPrice]);
-
+    const totalItems = calculateTotalPrice();
+    setTotalPrice(totalItems || 0);
+    // const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
+    /* if (cart.length > 0) {
+      const cartTotal = cart.reduce((acc: number, item: any) => acc + item.total, 0);
+    setValue(cartTotal);
+    } */
+  }, [selectedSizes, selectedQuantities, calculateTotalPrice, total]); 
+  
   const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
   
@@ -61,60 +74,52 @@ export default function ProductCard({ product,/*  setTotal, total  */}: ProductC
     }
   };
 
-  const total = useTotalStore((state) => state.total);
-  console.log('Novo total:', total);
-  
   const handleAddQuantity = (index: number) => {
     const newSelectedQuantities = [...selectedQuantities];
     newSelectedQuantities[index] = (newSelectedQuantities[index] || 0) + 1;
-    setSelectedQuantities(newSelectedQuantities);
     const itemPrice = priceBySize[selectedSizes[index]];
     const newTotalPrice = totalPrice + itemPrice;
-    console.log(increaseTotal(itemPrice))
-    // setTotal(prevTotal => prevTotal + itemPrice);
+    addValue(itemPrice);   
     setTotalPrice(newTotalPrice);
+    setSelectedQuantities(newSelectedQuantities);
   };
-    
+  
   const handleRemoveQuantity = (index: number) => {
     const newSelectedQuantities = [...selectedQuantities];
     const priceToRemove = priceBySize[selectedSizes[index]];
     if (newSelectedQuantities[index] > 0) {
       newSelectedQuantities[index] -= 1;
       const newTotalPrice = totalPrice - priceToRemove;
-      console.log(removeTotal(priceToRemove))
-      // setTotal(prevTotal => prevTotal - priceToRemove);
+      removeValue(priceToRemove);
       setTotalPrice(newTotalPrice);
       setSelectedQuantities(newSelectedQuantities); 
     }
   }; 
- 
- 
+  
   const handleAddToCart = () => {
-    const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
+    // const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
     const cartItem = {
       sabor: product.sabor,
       tamanho: selectedSizes,
       quantidade: selectedQuantities,
       total: totalPrice
     };
-    cartItems.push(cartItem);
-    
-    // Salvar o array atualizado no localStorage
-    localStorage.setItem('cart', JSON.stringify([...cartItems, cartItem]));
-    
+
+    addItemCart(cartItem);
+      // Salvar o array atualizado no localStorage
+    // localStorage.setItem('cart', JSON.stringify(cartItems));
+  
     // Calcular o novo valor total e atualizar o estado total
-    const newTotal = cartItems.reduce((acc: number, item: any) => acc + item.total, 0);
-    // setTotal(newTotal);
-    
+    const newTotal = cart.reduce((acc: number, item: any) => acc + item.total, 0) + totalPrice;
+    // setValue(newTotal);
+  
     // Limpar os estados para uma nova seleção
     setSelectedSizes([]);
     setSelectedQuantities([]);
-    // setTotalPrice(0);
+    setTotalPrice(0);
   };
-  
-  
 
- 
+  
   return (
     <div className='flex flex-col w-[350px] m-auto '>
       <p className='mt-5'>Sabor: {product.sabor}</p>
@@ -154,13 +159,12 @@ export default function ProductCard({ product,/*  setTotal, total  */}: ProductC
           <p key={size}>
             Quantidade {size}:
             <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-l" onClick={() => handleAddQuantity(index)}>+</button>
-            <span className="bg-gray-100 py-2 px-4">{selectedQuantities[index] || 0}</span>
+            <span className="bg-gray-100 py-2 px-4 text-black">{selectedQuantities[index] || 0}</span>
             <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r" onClick={() => handleRemoveQuantity(index)}>-</button>
           </p>
           ))}
         </div>
       </div>
-
       <p>
         Total:
         R$ {totalPrice || 0}
