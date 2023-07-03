@@ -44,7 +44,6 @@ export default function Home() {
     router.push('/register' as string)
     
   }
-
   return (
     <div className={styles.mainRegister}>
       <div className={styles.formLoginRegister} >
