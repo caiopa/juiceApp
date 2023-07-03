@@ -5,11 +5,15 @@ import { getProducts } from "../api/products/router";
 import ProductCard from "./productCard/page";
 import Carrousel from "../componentes/Carrousel";
 
-import { useTotalStore } from "@/store";
+import { useTotalStore } from '../../store/total';
 
 export default function Home() {
   const [products, setProducts] = useState(null);
-  const total = useTotalStore((state) => state.total)
+  const { 
+    state: { 
+      total,
+    }, 
+ } = useTotalStore();
  
   const getProduct = async (token: any) => {
     const produtos = await getProducts(token);
